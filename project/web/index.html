@@ -59,6 +59,9 @@
         <div>
             <button type="submit" onclick="postServer()">POST</button>
         </div>
+        <div>
+            <button type="submit" onclick="updateServer()">POST</button>
+        </div>
         <h3>Server response</h3>
         <div id="response">
 
@@ -92,6 +95,35 @@
 
         fetch('/api/movies', {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+
+    function updateServer() {
+        const data = {
+            movie_id: 2,
+            title: "Bill and Ted's Excellent Adventure",
+            release_year: "9999",
+            genre: "noir"
+            //~ origin: "France",
+            //~ director: "Coppola",
+            //~ genre: "Horror",
+            //~ wiki: "www.google.com",
+            //~ plot: "Ghosts overrun New York City"
+        }
+
+        fetch('/api/movies', {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },

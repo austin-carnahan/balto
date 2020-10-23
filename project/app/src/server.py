@@ -67,6 +67,16 @@ class DBManager:
         self.cursor.execute(sql, val)
         self.connection.commit()
 
+    def update_movie(self, movie_id, field, value):
+        _valid_columns = frozenset(['release_year', 'title', 'origin', 'director', 'genre', 'wiki_link', 'plot'])
+        if field not in _valid_columns:
+            raise Exception('Column not found')
+            
+        sql = "UPDATE movie SET {column_name} = %s WHERE id = %s".format(column_name=field)
+        val = (value, movie_id)
+        self.cursor.execute(sql, val)
+        self.connection.commit()
+
 
 # Initialize DB
 if not conn:
@@ -113,11 +123,34 @@ def add_movie():
         global conn
         if not conn:
             conn = DBManager()
+        try:    
+            conn.add_movie(movie)
+            return jsonify({"response": "Successfully Added Movie"})
+
+        except Exception as e:
+            print(e)
+            return jsonify({"response": "Error"})
             
-        conn.add_movie(movie)
+
+@server.route('/movies', methods=['PATCH'])
+def update_movie():
+    update = request.get_json()
+    if update:
+        global conn
+        if not conn:
+            conn = DBManager()
+
+        try:
+            for key, value in update.items():
+                if key != 'movie_id':
+                    conn.update_movie(update['movie_id'], key, value)
+            return jsonify({"response": "Successfully Updated Movie #" + str(update['movie_id'])})
+
+        except Exception as e:
+            print(e)
+            return jsonify({"response": "Error"})
+
         
-    return jsonify({"response": "Successfully Added Movie"})
-    
 
 if __name__ == '__main__':
     server.run(debug=True, host='0.0.0.0', port=5000)
