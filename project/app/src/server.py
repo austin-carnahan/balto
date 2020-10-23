@@ -4,6 +4,9 @@ from flask import Flask, jsonify, request
 import json
 import mysql.connector
 
+server = Flask(__name__)
+conn = None
+
 class DBManager:
     def __init__(self, database='example', host="db", user="root", password_file='/run/secrets/db-password'):
         pf = open(password_file, 'r')
@@ -58,9 +61,12 @@ class DBManager:
         self.cursor.execute(sql)
         return self.cursor
 
+    def add_movie(self, movie):
+        sql = "INSERT INTO movie (release_year, title, origin, director, genre, wiki_link, plot) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        val = (movie['year'], movie['title'], movie['origin'], movie['director'], movie['genre'], movie['wiki'], movie['plot'])
+        self.cursor.execute(sql, val)
+        self.connection.commit()
 
-server = Flask(__name__)
-conn = None
 
 # Initialize DB
 if not conn:
@@ -69,7 +75,7 @@ if not conn:
 
 
 @server.route('/movies', methods=['GET'])
-def movies():
+def all_movies():
     global conn
     if not conn:
         conn = DBManager()
@@ -92,14 +98,25 @@ def search():
         global conn
         if not conn:
             conn = DBManager()
+            
         q = conn.search(query)
 
         for item in q:
             result.append(item)
 
     return jsonify({"response": result})
-    
 
+@server.route('/movies', methods=['POST'])
+def add_movie():
+    movie = request.get_json()
+    if movie:
+        global conn
+        if not conn:
+            conn = DBManager()
+            
+        conn.add_movie(movie)
+        
+    return jsonify({"response": "Successfully Added Movie"})
     
 
 if __name__ == '__main__':

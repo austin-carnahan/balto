@@ -56,6 +56,9 @@
           <button type="submit" onclick="queryServer()">GET</button>
           <input id="path" type="text">
         </div>
+        <div>
+            <button type="submit" onclick="postServer()">POST</button>
+        </div>
         <h3>Server response</h3>
         <div id="response">
 
@@ -75,6 +78,34 @@
             document.getElementById('response').innerHTML = Http.responseText;
         }
     }
+
+    function postServer() {
+        const data = {
+            year: 1978,
+            title: "The Shawshank Redemtion",
+            origin: "France",
+            director: "Coppola",
+            genre: "Horror",
+            wiki: "www.google.com",
+            plot: "Ghosts overrun New York City"
+        }
+
+        fetch('/api/movies', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+
     </script>
   
   </body>
