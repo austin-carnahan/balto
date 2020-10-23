@@ -18,7 +18,7 @@ shut it down:
 
 ## Using the app
 
-A simple web page is exposed at localhost:80 with several buttons for interaction.
+A simple web page is exposed at **localhost:80** with several buttons for interaction.
 This page is primarily designed for testing the flask api.
 
 The app starts with a small sample of pre-loaded test data. If you want to load the
