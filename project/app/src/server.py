@@ -4,10 +4,6 @@ import flask
 import json
 import mysql.connector
 
-# for debugging from Visual Studio Code -- turn off flask debugger first
-# import ptvsd
-# ptvsd.enable_attach(address=('0.0.0.0', 3000))
-
 class DBManager:
     def __init__(self, database='example', host="db", user="root", password_file='/run/secrets/db-password'):
         pf = open(password_file, 'r')
@@ -19,26 +15,38 @@ class DBManager:
             auth_plugin='mysql_native_password'
         )
         pf.close()
-        self.cursor = self.connection.cursor()
+        self.cursor = self.connection.cursor(dictionary=True)
 
     def populate_db(self):
         self.cursor.execute('DROP TABLE IF EXISTS movie')
-        self.cursor.execute("CREATE TABLE movie (id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, release_year INT, title VARCHAR(255), origin VARCHAR(255), director VARCHAR(255), genre VARCHAR(255), wiki_link VARCHAR(255), plot TEXT)")
+        self.cursor.execute(
+                '''
+                CREATE TABLE movie (
+                    id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                    release_year INT,
+                    title VARCHAR(255),
+                    origin VARCHAR(255),
+                    director VARCHAR(255),
+                    genre VARCHAR(255),
+                    wiki_link VARCHAR(255),
+                    plot TEXT)
+                '''
+        )
+
+        # Insert some initial sample data
         sql= "INSERT INTO movie (release_year, title, origin, director, genre, wiki_link, plot) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         val = [
             (1999, 'Titanic', 'American', 'Abraham Lincoln', 'action', 'www.wikipedia.com', 'A promising inventor accidentally splices thier DNA with a fly and turns into a monster'),
-            (1989, 'Back to the Future', 'American', 'Teddy Roosevelt', 'Drama', 'www.wikipedia.com', 'The following plot synopsis was published in conjunction with a 1915 showing of the film at Carnegie Hall')
+            (1989, 'Back to the Future', 'American', 'Teddy Roosevelt', 'Drama', 'www.wikipedia.com', 'The following plot synopsis was published in conjunction with a 1915 showing of the film at Carnegie Hall'),
+            (1989, 'Back to the Future Pt. III', 'American', 'Franklin Roosevelt', 'Comedy', 'www.wikipedia.com', 'a 1915 showing of the film at Carnegie Hall')
         ]
         
         self.cursor.executemany(sql, val)
         self.connection.commit()
     
-    def query_titles(self):
-        self.cursor.execute('SELECT title FROM movie')
-        rec = []
-        for c in self.cursor:
-            rec.append(c[0])
-        return rec
+    def all_movies(self):
+        self.cursor.execute('SELECT * FROM movie')
+        return self.cursor
 
 
 server = flask.Flask(__name__)
@@ -48,37 +56,21 @@ conn = None
 if not conn:
     conn = DBManager()
     conn.populate_db()
-    conn.connection.close()
-    conn = None
 
-@server.route('/blogs')
-def listBlog():
-    global conn
-    if not conn:
-        conn = DBManager()
-        conn.populate_db()
-    rec = conn.query_titles()
 
-    result = []
-    for c in rec:
-        result.append(c)
-
-    return flask.jsonify({"response": result})
-
-@server.route('/')
+@server.route('/movies', methods=['GET'])
 def hello():
     global conn
     if not conn:
-        conn = DBManager(password_file='/run/secrets/db-password')
-        #~ conn.populate_db()
-    rec = conn.query_titles()
+        conn = DBManager()
+
+    q = conn.all_movies()
 
     result = []
-    for c in rec:
-        result.append(c)
+    for item in q:
+        result.append(item)
 
-    return flask.jsonify({"response": result, "test": "test string"})
-    #~ return flask.jsonify({"response": "Hello from Docker!"})
+    return flask.jsonify({"response": result})
 
 
 if __name__ == '__main__':
