@@ -104,13 +104,13 @@
         function addMovie() {
             const data = {
                 year: 1978,
-                title: "The Shawshank Redemtion",
+                title: "The Shawshank Redemption",
                 origin: "France",
                 director: "Coppola",
                 cast: "the ninja turtles",
                 genre: "Horror",
                 wiki: "www.google.com",
-                plot: "Ghosts overrun New York City"
+                plot: "Ghosts overrun New York City. The stay puft marshmallow man reigns supreme."
             }
 
             fetch('/api/movies', {
@@ -158,7 +158,6 @@
         function handleCSVUpload(event) {
             const files = event.target.files
             const formData = new FormData()
-            console.log(files[0])
             formData.append('file', files[0])
             
             fetch('/api/upload', {
