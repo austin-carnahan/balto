@@ -5,24 +5,20 @@ A simple CRUD app built with docker, flask, MySQL, and a lil Nginx.
 ## Running the app
 
 make sure you have docker and docker compose installed.
-
 From the project directory you can...
 
 build the app:
-
 `docker-compose build`
 
 run the app:
-
 `docker-compose up`
 
 shut it down:
-
 `docker-compose down`
 
 ## Using the app
 
-A simple web page is exposed at http://localhost with several buttons for interaction.
+A simple web page is exposed at localhost:80 with several buttons for interaction.
 This page is primarily designed for testing the flask api.
 
 The app starts with a small sample of pre-loaded test data. If you want to load the
