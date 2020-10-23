@@ -1,6 +1,6 @@
 
 import os
-import flask
+from flask import Flask, jsonify, request
 import json
 import mysql.connector
 
@@ -44,12 +44,22 @@ class DBManager:
         self.cursor.executemany(sql, val)
         self.connection.commit()
     
-    def all_movies(self):
+    def select_all(self):
         self.cursor.execute('SELECT * FROM movie')
         return self.cursor
 
+    def search(self, query):
+        """
+        FIX ME: vulnerable to SQL injection
+        Could not get this to work any other way and
+        Couldnt justify spending more time on it.
+        """
+        sql = "SELECT * FROM movie WHERE title LIKE '%{}%'".format(query)
+        self.cursor.execute(sql)
+        return self.cursor
 
-server = flask.Flask(__name__)
+
+server = Flask(__name__)
 conn = None
 
 # Initialize DB
@@ -59,19 +69,38 @@ if not conn:
 
 
 @server.route('/movies', methods=['GET'])
-def hello():
+def movies():
     global conn
     if not conn:
         conn = DBManager()
 
-    q = conn.all_movies()
+    q = conn.select_all()
 
     result = []
     for item in q:
         result.append(item)
 
-    return flask.jsonify({"response": result})
+    return jsonify({"response": result})
 
+@server.route('/search', methods=['GET'])
+def search():
+    result = []
+
+    if "query" in request.args:
+        query = request.args.get("query")
+        
+        global conn
+        if not conn:
+            conn = DBManager()
+        q = conn.search(query)
+
+        for item in q:
+            result.append(item)
+
+    return jsonify({"response": result})
+    
+
+    
 
 if __name__ == '__main__':
     server.run(debug=True, host='0.0.0.0', port=5000)

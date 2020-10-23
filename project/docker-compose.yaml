@@ -22,6 +22,8 @@ services:
     networks:
       - backend-network
       - frontend-network
+    environment:
+      - PYTHONUNBUFFERED=1
 
   web:
     build: web
