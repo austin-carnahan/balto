@@ -77,6 +77,15 @@ class DBManager:
         self.cursor.execute(sql, val)
         self.connection.commit()
 
+    """
+    FIX ME: tried identical syntax to update_movie about, but
+    can't get %s to map to movie_id for some reason here. Using the bad way.
+    """
+    def delete_movie(self, movie_id):
+        sql = "DELETE FROM movie WHERE id = {}".format(movie_id)
+        self.cursor.execute(sql)
+        self.connection.commit()
+
 
 # Initialize DB
 if not conn:
@@ -118,39 +127,49 @@ def search():
 
 @server.route('/movies', methods=['POST'])
 def add_movie():
-    movie = request.get_json()
-    if movie:
+    data = request.get_json()
+    if data:
         global conn
         if not conn:
             conn = DBManager()
         try:    
-            conn.add_movie(movie)
+            conn.add_movie(data)
             return jsonify({"response": "Successfully Added Movie"})
 
         except Exception as e:
-            print(e)
-            return jsonify({"response": "Error"})
+            return jsonify({"response": str(e)})
             
 
 @server.route('/movies', methods=['PATCH'])
 def update_movie():
-    update = request.get_json()
-    if update:
+    data = request.get_json()
+    if data:
         global conn
         if not conn:
             conn = DBManager()
 
         try:
-            for key, value in update.items():
+            for key, value in data.items():
                 if key != 'movie_id':
-                    conn.update_movie(update['movie_id'], key, value)
-            return jsonify({"response": "Successfully Updated Movie #" + str(update['movie_id'])})
+                    conn.update_movie(data['movie_id'], key, value)
+            return jsonify({"response": "Successfully Updated Movie #" + str(data['movie_id'])})
 
         except Exception as e:
-            print(e)
-            return jsonify({"response": "Error"})
+            return jsonify({"response": str(e)})
 
-        
+@server.route('/movies', methods=['DELETE'])
+def delete_movie():
+    data = request.get_json()
+    if data:
+        global conn
+        if not conn:
+            conn = DBManager()
+        try:
+            conn.delete_movie(data['movie_id'])
+            return jsonify({"response": "Successfully Deleted Movie #" + str(data['movie_id'])})
+            
+        except Exception as e:
+            return jsonify({"response": str(e)})
 
 if __name__ == '__main__':
     server.run(debug=True, host='0.0.0.0', port=5000)
