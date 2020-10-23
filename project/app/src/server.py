@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify, request
 import json
 import mysql.connector
+import pandas as pd
 
 server = Flask(__name__)
 conn = None
@@ -170,6 +171,14 @@ def delete_movie():
             
         except Exception as e:
             return jsonify({"response": str(e)})
+
+@server.route('/upload', methods=['POST'])
+def upload:
+    data_file = request.form['file'];
+    df = pd.read_csv(data_file)
+    columns = list(df.columns)
+
+    return jsonify({"response": "Successfully uploaded file" + str(columns)})
 
 if __name__ == '__main__':
     server.run(debug=True, host='0.0.0.0', port=5000)

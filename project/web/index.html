@@ -65,6 +65,9 @@
         <div>
             <button type="submit" onclick="deleteServer()">DELETE</button>
         </div>
+        <div>
+            <input type="file" id="fileUpload" accept=".csv" />
+        </div>
         <h3>Server response</h3>
         <div id="response">
 
@@ -73,6 +76,11 @@
     </div>
 
     <script type="text/javascript">
+    //listen for file upload
+    document.querySelector('#fileUpload').addEventListener('change', event => {
+      handleCSVUpload(event)
+    })
+    
     function queryServer() {
         const Http = new XMLHttpRequest();
         const path = document.getElementById('path').value;
@@ -126,6 +134,24 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+
+    function handleCSVUpload(event) {
+        const files = event.target.files
+        const formData = new FormData()
+        formData.append('file', files[0])
+
+        fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
         })
         .then(response => response.json())
         .then(data => {
