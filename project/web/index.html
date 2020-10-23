@@ -66,7 +66,7 @@
             <button type="submit" onclick="deleteServer()">DELETE</button>
         </div>
         <div>
-            <input type="file" id="fileUpload" accept=".csv" />
+            <input type="file" id="fileUpload" name="file" accept=".csv" />
         </div>
         <h3>Server response</h3>
         <div id="response">
@@ -78,7 +78,7 @@
     <script type="text/javascript">
     //listen for file upload
     document.querySelector('#fileUpload').addEventListener('change', event => {
-      handleCSVUpload(event)
+        handleCSVUpload(event)
     })
     
     function queryServer() {
@@ -99,6 +99,7 @@
             title: "The Shawshank Redemtion",
             origin: "France",
             director: "Coppola",
+            cast: "the ninja turtles",
             genre: "Horror",
             wiki: "www.google.com",
             plot: "Ghosts overrun New York City"
@@ -147,10 +148,14 @@
     function handleCSVUpload(event) {
         const files = event.target.files
         const formData = new FormData()
+        console.log(files[0])
         formData.append('file', files[0])
-
+        
         fetch('/api/upload', {
             method: 'POST',
+            //~ headers: {
+                //~ 'Content-Type': 'multipart/form-data'
+            //~ },
             body: formData,
         })
         .then(response => response.json())
@@ -162,7 +167,7 @@
         });
     }
 
-        function deleteServer() {
+    function deleteServer() {
         const data = {
             movie_id: 2,
         }

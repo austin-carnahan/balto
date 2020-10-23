@@ -1,8 +1,7 @@
-FROM python:3.8-alpine
+FROM python:3.8
 WORKDIR /src
 COPY requirements.txt .
-RUN apk update
-RUN apk add make automake gcc g++ subversion python3-dev
+RUN apt-get update && apt-get install -y python3-dev
 RUN pip install -r requirements.txt
 COPY ./src /src
 EXPOSE 5000
