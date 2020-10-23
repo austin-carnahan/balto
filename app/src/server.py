@@ -7,6 +7,7 @@ import pandas as pd
 from sqlalchemy import types, create_engine
 
 server = Flask(__name__)
+server.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB limit
 conn = None
 
 class DBManager:
@@ -38,7 +39,7 @@ class DBManager:
                     title VARCHAR(255),
                     origin VARCHAR(255),
                     director VARCHAR(255),
-                    cast VARCHAR(255),
+                    cast TEXT,
                     genre VARCHAR(255),
                     wiki_link VARCHAR(255),
                     plot TEXT)
@@ -77,9 +78,9 @@ class DBManager:
         self.connection.commit()
 
     def update_movie(self, movie_id, field, value):
-        _valid_columns = frozenset(['release_year', 'title', 'origin', 'director', 'cast' 'genre', 'wiki_link', 'plot'])
+        _valid_columns = frozenset(['release_year', 'title', 'origin', 'director', 'cast', 'genre', 'wiki_link', 'plot'])
         if field not in _valid_columns:
-            raise Exception('Column not found')
+            raise Exception('Column not found: ' + field )
             
         sql = "UPDATE movie SET {column_name} = %s WHERE id = %s".format(column_name=field)
         val = (value, movie_id)
@@ -96,24 +97,11 @@ class DBManager:
         self.connection.commit()
 
     def upload_csv(self, csv_file):
-        chunksize = 1000
         df = pd.read_csv(csv_file)
-        #~ df.rename(columns={
-            #~ df.columns[0]: "release_year",
-            #~ df.columns[1]: "title",
-            #~ df.columns[2]: "origin",
-            #~ df.columns[3]: "director",
-            #~ df.columns[4]: "genre",
-            #~ df.columns[5]: "wiki_page",
-            #~ df.columns[6]: "plot"
-                #~ }, inplace=True)
-                            
-        #~ columns = list(df.columns)
-
         df.fillna("None", inplace= True)
 
         """
-        The better way to import our df to mysql, all at once.
+        The better way to import our df to mysql, all at once, is using df.to_sql
         It's not recognizing the movie table, so instead I'm adding them
         one at a time.
         """
@@ -121,15 +109,11 @@ class DBManager:
         #~ df.to_sql(name='movie', con=engine, index=False, if_exists='replace')
 
         for index, row in df.iterrows():
-            print("ITERATING ON DF")
-            print(str(row))
-            print(tuple(row))
             sql = "INSERT INTO movie (release_year, title, origin, director, cast, genre, wiki_link, plot) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             val = tuple(row)
             self.cursor.execute(sql, val)
             self.connection.commit()
         
-
 
 # Initialize DB
 if not conn:
@@ -176,12 +160,9 @@ def add_movie():
         global conn
         if not conn:
             conn = DBManager()
-        try:    
-            conn.add_movie(data)
-            return jsonify({"response": "Successfully Added Movie"})
-
-        except Exception as e:
-            return jsonify({"response": str(e)})
+  
+        conn.add_movie(data)
+        return jsonify({"response": "Successfully Added Movie"})
             
 
 @server.route('/movies', methods=['PATCH'])
@@ -192,14 +173,10 @@ def update_movie():
         if not conn:
             conn = DBManager()
 
-        try:
-            for key, value in data.items():
-                if key != 'movie_id':
-                    conn.update_movie(data['movie_id'], key, value)
-            return jsonify({"response": "Successfully Updated Movie #" + str(data['movie_id'])})
-
-        except Exception as e:
-            return jsonify({"response": str(e)})
+        for key, value in data.items():
+            if key != 'movie_id':
+                conn.update_movie(data['movie_id'], key, value)
+        return jsonify({"response": "Successfully Updated Movie #" + str(data['movie_id'])})
 
 @server.route('/movies', methods=['DELETE'])
 def delete_movie():
@@ -208,28 +185,21 @@ def delete_movie():
         global conn
         if not conn:
             conn = DBManager()
-        try:
-            conn.delete_movie(data['movie_id'])
-            return jsonify({"response": "Successfully Deleted Movie #" + str(data['movie_id'])})
-            
-        except Exception as e:
-            return jsonify({"response": str(e)})
+
+        conn.delete_movie(data['movie_id'])
+        return jsonify({"response": "Successfully Deleted Movie #" + str(data['movie_id'])})
+
 
 @server.route('/upload', methods=['POST'])
 def upload():
-    print("UPLOAD CALLED:")
-    print(str(request.files['file']))
     data_file = request.files['file'];
     if data_file:
         global conn
         if not conn:
             conn = DBManager()
-        try:
-            conn.upload_csv(data_file)
-            return jsonify({"response": "Successfully uploaded data from file"})
 
-        except Exception as e:
-            return jsonify({"response": str(e)})
+        conn.upload_csv(data_file)
+        return jsonify({"response": "Successfully uploaded data from file"})
             
 
 if __name__ == '__main__':

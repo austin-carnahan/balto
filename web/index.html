@@ -1,0 +1,204 @@
+<html>
+
+  <head>
+        <title>Hello!</title>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <style>
+            *, ::after, ::before {
+              box-sizing: inherit;
+              background-color: #9eb5c2;
+              color: rgb(8, 8, 71);
+            }
+            .moby {
+              padding: 2rem 1rem;
+              margin-bottom: 2rem;
+              border-radius: .3rem;
+              border-bottom: 0;
+              text-align: center;
+              align-content: center;
+              align-items: center;
+              padding: 4rem 2rem;
+            }
+            .moby button {
+              color: #fff;
+              background-color: rgb(6, 105, 138);
+              border-color: rgb(6, 105, 138);
+              padding: 5px;
+              border-radius: 5px;
+              margin: 5px;
+            }
+            .moby .query {
+              text-align: left;
+              border: 3px dotted #e9ecef;
+              padding: 1.5rem 1.2rem;
+              max-width: 800px;
+              min-height: 200px;
+              margin-left: auto;
+              margin-right: auto;
+              border-radius: .3rem;
+            }
+            .moby .query button:hover{
+              cursor: pointer;
+              background-color: #73abff;
+            }
+        </style>
+  </head>
+  <body>
+      
+    <div class="moby"> 
+      <img src="https://www.docker.com/sites/default/files/Whale%20Logo332_5.png" />
+      <h1>Hello there!</h1>
+      <p>Simple DEV environment setup with Docker and Docker Compose</p>
+      <div class="query">
+        <div>
+          <button type="submit" onclick="searchTitle()">Search</button>
+          <input id="query" type="text">
+        </div>
+        <div>
+            <button type="submit" onclick="addMovie()">Add Movie</button>
+        </div>
+        <div>
+            <button type="submit" onclick="updateMovie()">Update Movie</button>
+        </div>
+        <div>
+            <button type="submit" onclick="deleteMovie()">Delete Movie</button>
+        </div>
+        <div>
+            <label for"fileUpload">Upload .csv File:</label>
+            <br />
+            <input type="file" id="fileUpload" name="file" accept=".csv" />
+        </div>
+        <h3>Server response</h3>
+        <div id="response">
+
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+        //listen for file upload
+        document.querySelector('#fileUpload').addEventListener('change', event => {
+            handleCSVUpload(event)
+        })
+
+        function searchTitle() {
+            const query_string = document.getElementById('query').value;
+            const url = '/api/search?query=' + encodeURIComponent(query_string)
+
+            fetch(url, {
+                method: 'GET'
+
+            })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('response').innerHTML = JSON.stringify(data);
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+            
+        }
+
+        function addMovie() {
+            const data = {
+                year: 1978,
+                title: "The Shawshank Redemtion",
+                origin: "France",
+                director: "Coppola",
+                cast: "the ninja turtles",
+                genre: "Horror",
+                wiki: "www.google.com",
+                plot: "Ghosts overrun New York City"
+            }
+
+            fetch('/api/movies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('response').innerHTML = data.response;
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+
+        function updateMovie() {
+            const data = {
+                movie_id: 2,
+                title: "Bill and Ted's Excellent Adventure",
+                release_year: "9999",
+                genre: "noir"
+            }
+
+            fetch('/api/movies', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('response').innerHTML = data.response 
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+
+        function handleCSVUpload(event) {
+            const files = event.target.files
+            const formData = new FormData()
+            console.log(files[0])
+            formData.append('file', files[0])
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('response').innerHTML = data.response  
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+
+        function deleteMovie() {
+            const data = {
+                movie_id: 3,
+            }
+
+            fetch('/api/movies', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('response').innerHTML = data.response  
+              console.log(data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+
+    </script>
+  
+  </body>
+
+</html>
